@@ -1,0 +1,467 @@
+<!-- Chosen Palette: INEM Institutional Palette (Pine, Amber, Leaf, Red, Paper) -->
+<!-- Application Structure Plan: Formulario de autenticación con doble persistencia (PHP Session + LocalStorage Fallback) para asegurar el inicio de sesión fluido en cualquier entorno. -->
+<!-- Visualization & Content Choices: Interfaz limpia con Materialize CSS alineada a los colores institucionales. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Iniciar Sesión — INEM José Félix</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --pine:      #1a4d3a;
+      --pine-dark: #0f3327;
+      --leaf:      #3f9468;
+      --amber:     #d9922f;
+      --paper:     #f6f3ec;
+      --panel:     #fffdf8;
+      --ink:       #23261f;
+      --line:      #ddd6c4;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      display: flex;
+      min-height: 100vh;
+      min-height: 100dvh;
+      flex-direction: column;
+    }
+    main { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
+    h4, nav .brand-logo { font-family: 'Fraunces', serif; }
+    nav { background-color: var(--pine-dark) !important; border-bottom: 3px solid var(--amber); }
+
+    /* ── El brand-logo de Materialize se centra con position:absolute y
+         un font-size fijo de 2.1rem sin importar el ancho de pantalla,
+         por eso en mobile se salía del nav y se pisaba con el link de
+         la derecha. Se lo achica y se lo trunca con ellipsis. ── */
+    .nav-wrapper .brand-logo {
+      font-size: 1.5rem;
+      max-width: 60vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 560px) {
+      .nav-wrapper .brand-logo {
+        position: static !important;
+        transform: none !important;
+        float: left;
+        line-height: 56px;
+        font-size: 1.1rem;
+        max-width: 55vw;
+      }
+      .nav-wrapper .right { padding-right: 4px; }
+      .nav-wrapper .right li a { font-size: 0.8rem; padding: 0 12px; }
+    }
+    .card-login {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 30px 24px;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(15,51,39,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+    .btn-login {
+      background-color: var(--pine) !important;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+    .btn-login:hover { background-color: var(--pine-dark) !important; }
+
+    .field-hint {
+      display: block;
+      font-size: 12px;
+      margin: 5px 0 0 2px;
+      min-height: 15px;
+      transition: color 0.15s ease;
+    }
+    .field-hint.error { color: #c0392b; font-weight: 600; }
+    .field-hint.ok { color: var(--leaf); font-weight: 600; }
+
+    /* ── Campos en casillas con borde (sin el estilo de línea de Materialize) ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--pine-dark);
+      margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9a9184;
+      font-size: 19px;
+      pointer-events: none;
+      transition: color 0.15s ease;
+    }
+    /* Sobreescribe con !important las reglas de Materialize para
+       input[type=...] (padding:0, border-bottom, margin-bottom, etc.) */
+    input.form-control-custom {
+      width: 100% !important;
+      height: 46px !important;
+      background: var(--paper) !important;
+      border: 1.5px solid var(--line) !important;
+      border-radius: 10px !important;
+      padding: 0 14px 0 42px !important;
+      font-size: 0.92rem !important;
+      color: var(--ink) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none;
+      box-sizing: border-box !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .form-control-custom::placeholder { color: #a89f92; opacity: 1; }
+    input.form-control-custom:focus:not([readonly]) {
+      border: 1.5px solid var(--leaf) !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+    }
+    .input-wrap:focus-within .field-icon { color: var(--leaf); }
+    input.form-control-custom.input-error { border-color: #c0392b !important; background: #fdf1ef !important; }
+    input.form-control-custom.input-ok { border-color: var(--leaf) !important; }
+    .toggle-pass {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 6px;
+      cursor: pointer;
+      color: #9a9184;
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+    .toggle-pass .material-icons { font-size: 19px; }
+    .toggle-pass:hover { color: var(--pine); background: rgba(63,148,104,0.1); }
+    .input-wrap:focus-within .toggle-pass { color: var(--leaf); }
+    input.form-control-custom.has-toggle { padding-right: 40px !important; }
+
+    /* ── Notificaciones propias (reemplazan el toast anticuado de Materialize) ── */
+    .toast-container-custom {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 36px);
+    }
+    .toast-custom {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--amber);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 51, 39, 0.16);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--ink);
+      animation: toastEntrada 0.25s ease;
+    }
+    .toast-custom.exito   { border-left-color: var(--leaf); }
+    .toast-custom.error   { border-left-color: #c0392b; }
+    .toast-custom .toast-icono { font-size: 19px; flex-shrink: 0; margin-top: 1px; }
+    .toast-custom.aviso .toast-icono  { color: var(--amber); }
+    .toast-custom.exito .toast-icono  { color: var(--leaf); }
+    .toast-custom.error .toast-icono  { color: #c0392b; }
+    .toast-custom .toast-texto b { font-weight: 700; color: var(--pine-dark); }
+    @keyframes toastEntrada { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastSalida  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-6px); } }
+    @media (max-width: 480px) {
+      .toast-container-custom { top: auto; bottom: 14px; left: 14px; right: 14px; max-width: none; width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-wrapper container">
+    <a href="index.html" class="brand-logo">INEM José Félix</a>
+    <ul class="right">
+      <li><a href="index.html">Volver al Mapa</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="card-login">
+    <div class="center-align" style="margin-bottom: 20px;">
+      <img src="INEMlogo.png" alt="INEM Logo" style="height: 60px; border-radius: 6px;">
+      <h4 style="color: var(--pine-dark); margin: 10px 0 5px; font-weight: 700;">Iniciar Sesión</h4>
+      <p style="color: #6b7280; font-size: 13px; margin: 0;">Módulo de Reservas para Docentes</p>
+    </div>
+
+    <form id="loginForm">
+      <div class="form-group">
+        <label class="form-label" for="correo">Correo institucional</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">email</i>
+          <input id="correo" type="email" class="form-control-custom" placeholder="usuario@inemjose.edu.co">
+        </div>
+        <span class="field-hint" id="hintCorreo"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Contraseña</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">lock</i>
+          <input id="password" type="password" class="form-control-custom has-toggle" placeholder="Tu contraseña" autocomplete="current-password">
+          <button type="button" class="toggle-pass" tabindex="-1" aria-label="Mostrar contraseña" onclick="togglePassword('password', this)">
+            <span class="material-icons">visibility</span>
+          </button>
+        </div>
+        <span class="field-hint" id="hintPassword"></span>
+      </div>
+
+      <div style="text-align: right; margin-top: -8px;">
+        <a href="OlvidePassword.html" style="font-size: 12.5px; color: var(--pine); font-weight: 600; text-decoration: none;">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <button type="submit" class="btn btn-login waves-effect waves-light">Ingresar al Sistema</button>
+    </form>
+
+    <!-- ── Segundo paso: código de la app autenticadora (2FA) ──
+         Oculto por defecto; se muestra solo si el servidor responde
+         que la cuenta tiene la verificación en dos pasos activada. ── -->
+    <form id="totpForm" style="display:none;">
+      <div class="center-align" style="margin-bottom: 16px;">
+        <i class="material-icons" style="font-size:38px; color: var(--pine);">phonelink_lock</i>
+        <p style="color: #6b7280; font-size: 13px; margin: 8px 0 0;">
+          Ingresa el código de 6 dígitos de tu app autenticadora.
+        </p>
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="totpCodigo">Código de verificación</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">pin</i>
+          <input id="totpCodigo" type="text" inputmode="numeric" maxlength="6" class="form-control-custom" placeholder="000000" style="letter-spacing:3px;">
+        </div>
+        <span class="field-hint" id="hintTotp"></span>
+      </div>
+      <button type="submit" class="btn btn-login waves-effect waves-light">Verificar e ingresar</button>
+      <div style="text-align:center; margin-top:12px;">
+        <a href="#" id="cancelarTotp" style="font-size: 12.5px; color: var(--pine); font-weight: 600; text-decoration: none;">← Volver a intentar con otra cuenta</a>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('.material-icons');
+    const mostrar = input.type === 'password';
+    input.type = mostrar ? 'text' : 'password';
+    icon.textContent = mostrar ? 'visibility_off' : 'visibility';
+    btn.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  }
+
+  function setHint(inputId, hintId, mensaje, tipo) {
+    const input = document.getElementById(inputId);
+    const hint = document.getElementById(hintId);
+    hint.textContent = mensaje;
+    hint.className = 'field-hint' + (tipo ? ' ' + tipo : '');
+    input.classList.remove('input-error', 'input-ok');
+    if (tipo === 'error') input.classList.add('input-error');
+    if (tipo === 'ok') input.classList.add('input-ok');
+  }
+
+  // ── Notificación propia (reemplaza M.toast) ──────────────────────
+  function mostrarNotificacion(mensaje, tipo = 'aviso', icono) {
+    let cont = document.getElementById('toastContainerCustom');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'toastContainerCustom';
+      cont.className = 'toast-container-custom';
+      document.body.appendChild(cont);
+    }
+    const iconos = { aviso: 'warning', error: 'error', exito: 'check_circle' };
+    const el = document.createElement('div');
+    el.className = 'toast-custom ' + tipo;
+    el.innerHTML = `<i class="material-icons toast-icono">${icono || iconos[tipo] || 'info'}</i><span class="toast-texto">${mensaje}</span>`;
+    cont.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'toastSalida 0.25s ease forwards';
+      setTimeout(() => el.remove(), 250);
+    }, 3200);
+  }
+
+  // ── Notificación cuando el usuario deja un campo vacío al salir
+  //    de él (blur), además del hint rojo debajo del campo. ──────
+  let ultimoToastCampo = 0;
+  function notificarCampoVacio(mensaje) {
+    const ahora = Date.now();
+    if (ahora - ultimoToastCampo < 600) return;
+    ultimoToastCampo = ahora;
+    mostrarNotificacion(`Te falta completar: <b>${mensaje}</b>`, 'aviso');
+  }
+
+  function validarCorreoLogin() {
+    const correo = document.getElementById('correo').value.trim();
+    if (correo === '') {
+      setHint('correo', 'hintCorreo', '⚠️ Este campo es obligatorio.', 'error');
+      notificarCampoVacio('tu correo institucional');
+      return false;
+    }
+    const formatoValido = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo);
+    if (!formatoValido) {
+      setHint('correo', 'hintCorreo', '❌ Ingresa un correo válido.', 'error');
+      return false;
+    }
+    setHint('correo', 'hintCorreo', '✓ Correo válido.', 'ok');
+    return true;
+  }
+
+  function validarPasswordLogin() {
+    const password = document.getElementById('password').value;
+    if (password === '') {
+      setHint('password', 'hintPassword', '⚠️ Ingresa tu contraseña.', 'error');
+      notificarCampoVacio('tu contraseña');
+      return false;
+    }
+    setHint('password', 'hintPassword', '', '');
+    return true;
+  }
+
+  // Lost focus (blur): valida apenas el usuario sale del campo
+  document.getElementById('correo').addEventListener('blur', validarCorreoLogin);
+  document.getElementById('password').addEventListener('blur', validarPasswordLogin);
+
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const correo = document.getElementById('correo').value.trim();
+    const password = document.getElementById('password').value;
+
+    const correoOk = validarCorreoLogin();
+    const passwordOk = validarPasswordLogin();
+    if (!correoOk || !passwordOk) {
+      mostrarNotificacion('Revisa los campos marcados en rojo.', 'aviso');
+      return;
+    }
+
+    const usuarioPrevio = correo.split('@')[0].replace('.', ' ');
+    const nombreFormateado = "Prof. " + usuarioPrevio.charAt(0).toUpperCase() + usuarioPrevio.slice(1);
+
+    const datosUsuario = {
+      nombre: nombreFormateado,
+      correo: correo
+    };
+
+    // Autenticación real contra el servidor PHP.
+    // Solo se guarda sesión y se redirige si el servidor confirma las credenciales.
+    try {
+      const resp = await fetch('login.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ correo, password })
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok && data.exito && data.requiere_2fa) {
+        // La cuenta tiene 2FA activado: pedimos el código antes de
+        // dar por terminado el inicio de sesión.
+        document.getElementById('loginForm').style.display = 'none';
+        document.getElementById('totpForm').style.display = 'block';
+        mostrarNotificacion('Ingresa el código de tu app autenticadora.', 'aviso');
+        setTimeout(() => document.getElementById('totpCodigo').focus(), 100);
+        return;
+      }
+
+      if (resp.ok && data.exito && data.usuario) {
+        completarSesion(data.usuario);
+      } else {
+        mostrarNotificacion(data.error || 'Correo o contraseña incorrectos.', 'error');
+      }
+    } catch (err) {
+      console.error("Error al conectar con el servidor:", err);
+      mostrarNotificacion('No se pudo conectar con el servidor. Intenta de nuevo.', 'aviso');
+    }
+  });
+
+  function completarSesion(usuario) {
+    const datosUsuario = {
+      nombre: usuario.nombre,
+      correo: usuario.correo,
+      rol: usuario.rol || 'docente'
+    };
+    localStorage.setItem("usuarioINEM", JSON.stringify(datosUsuario));
+
+    mostrarNotificacion('Sesión iniciada correctamente', 'exito');
+
+    // Los administradores van a admin.php, los docentes/estudiantes al mapa principal.
+    setTimeout(() => {
+      window.location.href = (datosUsuario.rol === 'administrador') ? "admin.php" : "index.html";
+    }, 800);
+  }
+
+  // ── Segundo paso: verificar el código de la app autenticadora ──────
+  document.getElementById('totpForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    const codigo = document.getElementById('totpCodigo').value.trim();
+
+    if (!/^\d{6}$/.test(codigo)) {
+      setHint('totpCodigo', 'hintTotp', '⚠️ Ingresa los 6 dígitos del código.', 'error');
+      return;
+    }
+
+    try {
+      const resp = await fetch('login_verificar_totp.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo })
+      });
+      const data = await resp.json();
+
+      if (resp.ok && data.exito && data.usuario) {
+        completarSesion(data.usuario);
+      } else {
+        setHint('totpCodigo', 'hintTotp', '❌ ' + (data.error || 'Código incorrecto.'), 'error');
+        mostrarNotificacion(data.error || 'Código incorrecto.', 'error');
+      }
+    } catch (err) {
+      console.error("Error al conectar con el servidor:", err);
+      mostrarNotificacion('No se pudo conectar con el servidor. Intenta de nuevo.', 'aviso');
+    }
+  });
+
+  document.getElementById('cancelarTotp').addEventListener('click', function (e) {
+    e.preventDefault();
+    document.getElementById('totpForm').style.display = 'none';
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('totpCodigo').value = '';
+  });
+</script>
+</body>
+</html>

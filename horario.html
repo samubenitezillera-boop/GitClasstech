@@ -1,0 +1,617 @@
+<!-- Chosen Palette: INEM Institutional Palette (Pine, Amber, Leaf, Red, Paper) — igual que TABLA.html / index.html -->
+<!-- Application Structure Plan: Vista compacta de horario semanal (grilla de 5 columnas Lunes–Viernes),
+     con modal de detalle al hacer clic en cada clase. Mismo header y estilo que el resto del sitio. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Mi Horario — INEM José Félix</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --pine:        #154333;
+      --pine-dark:   #0b291f;
+      --leaf:        #2d7a54;
+      --leaf-soft:   #e2f0e8;
+      --amber:       #d9822b;
+      --amber-soft:  #fdf3e7;
+      --red:         #c0392b;
+      --red-soft:    #fcdad7;
+      --paper:       #f7f5f0;
+      --panel:       #ffffff;
+      --ink:         #1c231f;
+      --ink-muted:   #626b65;
+      --line:        #e3ded3;
+      --radius:      14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: 40px;
+    }
+
+    h1, h4, h5, .brand-logo-text, #modalMateria {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* HEADER — mismo estilo que TABLA.html */
+    nav {
+      background-color: var(--pine-dark);
+      border-bottom: 3px solid var(--amber);
+      box-shadow: 0 4px 12px rgba(11, 41, 31, 0.15);
+      height: 64px;
+    }
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      padding: 0 16px;
+      max-width: 1100px;
+      margin: 0 auto;
+      gap: 12px;
+    }
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+      min-width: 0;
+    }
+    .brand-logo-text {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .nav-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+    .nav-user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      white-space: nowrap;
+    }
+    .nav-link-btn {
+      color: rgba(255, 255, 255, 0.9);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: color 0.2s;
+      white-space: nowrap;
+    }
+    .nav-link-btn:hover { color: var(--amber); }
+
+    /* MAIN LAYOUT */
+    main { max-width: 1100px; margin: 0 auto; padding: 20px 14px; }
+
+    .info-card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+    }
+    .info-aula { display: flex; align-items: center; gap: 12px; }
+    .info-aula-icon {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: var(--leaf-soft); color: var(--leaf);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .info-aula-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--ink-muted); font-weight: 600; }
+    .info-aula-value { font-size: 1rem; font-weight: 700; color: var(--pine-dark); }
+
+    .info-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .grupo-pill {
+      background: var(--amber);
+      color: #ffffff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      padding: 7px 14px;
+      border-radius: 20px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    select#selectSeccionManual {
+      border: 1.5px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 0.82rem;
+      font-weight: 600;
+      border-radius: 20px;
+      padding: 7px 12px;
+      cursor: pointer;
+    }
+    .btn-cambiar-grupo {
+      border: 1.5px solid var(--line);
+      background: var(--panel);
+      color: var(--pine-dark);
+      border-radius: 20px;
+      padding: 7px 14px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color .15s, background .15s;
+    }
+    .btn-cambiar-grupo:hover { border-color: var(--leaf); background: var(--leaf-soft); }
+
+    .jornada-tag {
+      font-size: 0.78rem;
+      color: var(--ink-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+
+    /* WEEKLY GRID — compacto, 5 columnas en desktop */
+    #contenedorHorario {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+
+    .day-column {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .day-header {
+      background: var(--pine);
+      color: #ffffff;
+      padding: 10px 12px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 3px solid var(--amber);
+    }
+    .day-header .count {
+      font-weight: 500;
+      font-size: 0.68rem;
+      background: rgba(255,255,255,0.18);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .day-body {
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .class-block {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-left: 3px solid var(--leaf);
+      border-radius: 9px;
+      padding: 7px 9px;
+      cursor: pointer;
+      transition: border-color 0.15s ease, transform 0.1s ease, box-shadow 0.15s ease;
+    }
+    .class-block:hover {
+      border-color: var(--leaf);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba(21,67,51,0.1);
+    }
+    .class-block .top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.68rem; margin-bottom: 3px;
+    }
+    .hora-tag {
+      color: var(--red); background: var(--red-soft);
+      padding: 1px 6px; border-radius: 5px; font-weight: 700;
+    }
+    .bloque-tag { color: var(--ink-muted); font-weight: 600; }
+    .class-block .materia {
+      font-weight: 700; font-size: 0.82rem; color: var(--ink);
+      line-height: 1.2; margin-bottom: 4px;
+    }
+    .class-block .bottom-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.68rem; padding-top: 5px; border-top: 1px dashed var(--line);
+      gap: 6px;
+    }
+    .docente-tag {
+      color: var(--ink-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .salon-tag {
+      background: var(--leaf-soft); color: var(--pine-dark);
+      font-weight: 700; padding: 1px 7px; border-radius: 5px; white-space: nowrap;
+    }
+
+    .receso-block {
+      background: var(--amber-soft);
+      border: 1px dashed var(--amber);
+      border-radius: 9px;
+      padding: 7px 9px;
+      text-align: center;
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #8a5a1c;
+    }
+
+    .estado-carga, .estado-error {
+      grid-column: 1 / -1;
+      text-align: center;
+      padding: 40px 10px;
+      color: var(--ink-muted);
+    }
+    .spinner {
+      width: 32px; height: 32px; margin: 0 auto 10px;
+      border: 3px solid var(--leaf-soft);
+      border-top-color: var(--leaf);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0;
+      background: rgba(11,41,31,0.5);
+      display: flex; align-items: center; justify-content: center;
+      padding: 16px;
+      z-index: 900;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.2s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: auto; }
+    .modal-card {
+      background: var(--panel);
+      border-radius: 18px;
+      max-width: 400px; width: 100%;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+      transform: scale(0.95);
+      transition: transform 0.2s ease;
+    }
+    .modal-overlay.open .modal-card { transform: scale(1); }
+    .modal-header-custom {
+      background: var(--pine-dark); color: #ffffff;
+      padding: 18px 20px; position: relative;
+      border-bottom: 3px solid var(--amber);
+    }
+    .modal-close-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(255,255,255,0.15); border: none; color: white;
+      width: 30px; height: 30px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; font-size: 16px;
+    }
+    .modal-header-sub {
+      font-size: 0.75rem; color: var(--leaf-soft);
+      display: flex; align-items: center; gap: 6px; margin-bottom: 4px;
+    }
+    #modalMateria { font-size: 1.2rem; font-weight: 700; }
+    .modal-body-custom { padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+    .modal-row {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .modal-row-icon {
+      width: 34px; height: 34px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .modal-row-label { font-size: 0.7rem; color: var(--ink-muted); font-weight: 600; }
+    .modal-row-value { font-size: 0.9rem; font-weight: 700; color: var(--ink); }
+    .modal-footer-custom {
+      padding: 12px 20px 18px; text-align: right;
+    }
+    .btn-modal-close {
+      background: var(--pine); color: #fff; border: none;
+      border-radius: 10px; padding: 10px 20px; font-weight: 700;
+      font-size: 0.88rem; cursor: pointer; width: 100%;
+    }
+    .btn-modal-close:hover { background: var(--pine-dark); }
+
+    @media (max-width: 560px) {
+      .nav-link-btn span.label-text { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-container">
+    <a href="index.html" class="brand-group">
+      <img src="INEMlogo.png" alt="INEM Logo" style="height: 32px; border-radius: 4px;">
+      <span class="brand-logo-text">INEM José Félix</span>
+    </a>
+    <div class="nav-right" id="navRightMenu">
+      <a href="index.html" class="nav-link-btn"><i class="material-icons" style="font-size:18px;">map</i> <span class="label-text">Mapa</span></a>
+      <a href="InicioSesion.html" id="sessionLink" class="nav-link-btn"><i class="material-icons" style="font-size:18px;">login</i> <span class="label-text">Iniciar sesión</span></a>
+      <span id="userLink" class="nav-user-pill" style="display: none;">
+        <i class="material-icons" style="font-size:16px;">account_circle</i>
+        <span id="userNameText">—</span>
+      </span>
+      <a href="logout.php" id="logoutLink" onclick="cerrarSesionLocal(event)" class="nav-link-btn" style="display: none;">
+        <i class="material-icons" style="font-size:18px;">power_settings_new</i>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="info-card">
+    <div class="info-aula">
+      <div class="info-aula-icon"><i class="material-icons">door_front</i></div>
+      <div>
+        <div class="info-aula-label">Aula Principal</div>
+        <div class="info-aula-value" id="lblAulaPrincipal">Cargando...</div>
+      </div>
+    </div>
+    <div class="info-actions">
+      <span class="grupo-pill"><i class="material-icons" style="font-size:15px;">groups</i> <span id="lblSeccion">Grupo 11-1</span></span>
+      <select id="selectSeccionManual" class="hide-select" style="display:none;" onchange="cambiarSeccion(this.value)"></select>
+      <button class="btn-cambiar-grupo" onclick="toggleSelectorGrupo()"><i class="material-icons" style="font-size:16px;">sync</i> Cambiar grupo</button>
+      <span class="jornada-tag"><i class="material-icons" style="font-size:15px;">schedule</i> Jornada Mañana (06:45 – 13:40)</span>
+    </div>
+  </div>
+
+  <div id="contenedorHorario">
+    <div class="estado-carga">
+      <div class="spinner"></div>
+      <p>Cargando horario escolar...</p>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL DETALLE -->
+<div class="modal-overlay" id="modalDetalle" onclick="if(event.target===this) cerrarModal()">
+  <div class="modal-card">
+    <div class="modal-header-custom">
+      <button class="modal-close-btn" onclick="cerrarModal()"><i class="material-icons" style="font-size:16px;">close</i></button>
+      <div class="modal-header-sub" id="modalDiaBloque"><i class="material-icons" style="font-size:14px;">event</i> —</div>
+      <h5 id="modalMateria">—</h5>
+    </div>
+    <div class="modal-body-custom">
+      <div class="modal-row">
+        <div class="modal-row-icon" style="background:var(--red-soft); color:var(--red);"><i class="material-icons" style="font-size:18px;">schedule</i></div>
+        <div>
+          <div class="modal-row-label">Horario</div>
+          <div class="modal-row-value" id="modalHora">—</div>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-row-icon" style="background:var(--leaf-soft); color:var(--leaf);"><i class="material-icons" style="font-size:18px;">person</i></div>
+        <div>
+          <div class="modal-row-label">Docente</div>
+          <div class="modal-row-value" id="modalDocente">—</div>
+        </div>
+      </div>
+      <div class="modal-row">
+        <div class="modal-row-icon" style="background:var(--amber-soft); color:#8a5a1c;"><i class="material-icons" style="font-size:18px;">location_on</i></div>
+        <div>
+          <div class="modal-row-label">Salón</div>
+          <div class="modal-row-value" id="modalSalon">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer-custom">
+      <button class="btn-modal-close" onclick="cerrarModal()">Entendido</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const API_SESION = "obtener_usuario.php";
+  let usuarioLogueado = null;
+  let seccionActual = "11-1";
+
+  // ── Sesión (igual patrón que index.html / TABLA.html) ──────────────
+  async function verificarSesion() {
+    try {
+      const resp = await fetch(API_SESION);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (data && data.autenticado && data.usuario) {
+          usuarioLogueado = data.usuario;
+          aplicarUIUsuario();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Servidor PHP no alcanzado, revisando almacenamiento local.");
+    }
+    const sesionLocal = localStorage.getItem("usuarioINEM");
+    if (sesionLocal) {
+      try {
+        usuarioLogueado = JSON.parse(sesionLocal);
+        aplicarUIUsuario();
+      } catch (e) {
+        console.error("Error al leer sesión local:", e);
+      }
+    }
+  }
+
+  function aplicarUIUsuario() {
+    if (!usuarioLogueado || !usuarioLogueado.nombre) return;
+    const sessionLink = document.getElementById("sessionLink");
+    const userLink = document.getElementById("userLink");
+    const logoutLink = document.getElementById("logoutLink");
+    const userNameText = document.getElementById("userNameText");
+
+    if (sessionLink) sessionLink.style.display = "none";
+    if (userLink && userNameText) {
+      userNameText.textContent = usuarioLogueado.nombre;
+      userLink.style.display = "inline-flex";
+    }
+    if (logoutLink) logoutLink.style.display = "inline-flex";
+  }
+
+  function cerrarSesionLocal() {
+    localStorage.removeItem("usuarioINEM");
+  }
+
+  // ── Selector de grupo ──────────────────────────────────────────────
+  function toggleSelectorGrupo() {
+    const select = document.getElementById('selectSeccionManual');
+    select.style.display = select.style.display === 'none' ? 'inline-block' : 'none';
+  }
+
+  function poblarSelectorGrupos() {
+    const select = document.getElementById('selectSeccionManual');
+    let opciones = '';
+    for (let i = 1; i <= 17; i++) {
+      opciones += `<option value="11-${i}">Grupo 11-${i}</option>`;
+    }
+    select.innerHTML = opciones;
+  }
+
+  function cambiarSeccion(nuevaSeccion) {
+    const usuario = JSON.parse(localStorage.getItem('usuarioINEM') || '{}');
+    usuario.seccion = nuevaSeccion;
+    localStorage.setItem('usuarioINEM', JSON.stringify(usuario));
+    cargarHorario(nuevaSeccion);
+  }
+
+  // ── Carga y render del horario ──────────────────────────────────────
+  async function cargarHorario(seccionTarget) {
+    const usuario = JSON.parse(localStorage.getItem('usuarioINEM') || '{}');
+    const seccion = seccionTarget || (usuarioLogueado && usuarioLogueado.seccion) || usuario.seccion || '11-1';
+    seccionActual = seccion;
+
+    document.getElementById('lblSeccion').textContent = `Grupo ${seccion}`;
+    document.getElementById('selectSeccionManual').value = seccion;
+
+    try {
+      const res = await fetch(`api_horario.php?seccion=${encodeURIComponent(seccion)}`);
+      if (!res.ok) throw new Error('Sin respuesta de servidor');
+      const data = await res.json();
+
+      document.getElementById('lblAulaPrincipal').textContent = data.aula_principal || `Salón ${seccion}`;
+      renderizarGrillaSemanal(data.dias || {});
+    } catch (err) {
+      console.error(err);
+      document.getElementById('lblAulaPrincipal').textContent = '—';
+      document.getElementById('contenedorHorario').innerHTML = `
+        <div class="estado-error">
+          <i class="material-icons" style="font-size:32px; color:var(--red); margin-bottom:8px;">error_outline</i>
+          <p>No se pudo cargar el horario. Verifica tu conexión con el servidor.</p>
+        </div>`;
+    }
+  }
+
+  function renderizarGrillaSemanal(dias) {
+    const contenedor = document.getElementById('contenedorHorario');
+    contenedor.innerHTML = '';
+
+    const listaDias = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes"];
+
+    listaDias.forEach(dia => {
+      const clases = dias[dia] || [];
+      const col = document.createElement('div');
+      col.className = 'day-column';
+
+      const bloquesCount = clases.filter(c => c.periodo !== 'RECESO').length;
+
+      let bloquesHTML = '';
+      clases.forEach((c, idx) => {
+        const esReceso = c.periodo === 'RECESO' || (c.materia || '').toLowerCase().includes('receso');
+
+        if (esReceso) {
+          bloquesHTML += `
+            <div class="receso-block">
+              <i class="material-icons" style="font-size:13px; vertical-align:-2px;">free_breakfast</i>
+              ${c.hora} · Receso
+            </div>`;
+        } else {
+          const idClase = `${dia}-${idx}`;
+          claseDataStore[idClase] = { dia, ...c };
+          bloquesHTML += `
+            <div class="class-block" onclick="abrirModal('${idClase}')">
+              <div class="top-row">
+                <span class="hora-tag">${(c.hora || '').split('-')[0].trim()}</span>
+                <span class="bloque-tag">Bloque ${c.periodo}</span>
+              </div>
+              <div class="materia">${c.materia}</div>
+              <div class="bottom-row">
+                <span class="docente-tag">${(c.docente || '').split(' ')[0]}</span>
+                <span class="salon-tag">${c.salon}</span>
+              </div>
+            </div>`;
+        }
+      });
+
+      col.innerHTML = `
+        <div class="day-header">
+          <span>${dia}</span>
+          <span class="count">${bloquesCount} bloques</span>
+        </div>
+        <div class="day-body">${bloquesHTML || '<p style="font-size:0.75rem; color:var(--ink-muted); text-align:center; padding:12px 0;">Sin clases</p>'}</div>
+      `;
+      contenedor.appendChild(col);
+    });
+  }
+
+  // ── Modal ──────────────────────────────────────────────────────────
+  const claseDataStore = {};
+
+  function abrirModal(idClase) {
+    const c = claseDataStore[idClase];
+    if (!c) return;
+
+    document.getElementById('modalDiaBloque').innerHTML = `<i class="material-icons" style="font-size:14px;">event</i> ${c.dia} · Bloque ${c.periodo}`;
+    document.getElementById('modalMateria').textContent = c.materia;
+    document.getElementById('modalHora').textContent = c.hora;
+    document.getElementById('modalDocente').textContent = c.docente || 'Por asignar';
+    document.getElementById('modalSalon').textContent = c.salon || 'Salón Principal';
+
+    document.getElementById('modalDetalle').classList.add('open');
+  }
+
+  function cerrarModal() {
+    document.getElementById('modalDetalle').classList.remove('open');
+  }
+
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') cerrarModal(); });
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    poblarSelectorGrupos();
+    await verificarSesion();
+    cargarHorario();
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,731 @@
+<!-- Chosen Palette: INEM Institutional Palette (Pine, Amber, Leaf, Red, Paper) -->
+<!-- Application Structure Plan: Formulario de registro con selector Docente / Estudiante.
+     Si eliges Estudiante, se piden Grado y Grupo (obligatorios). Consistente en estilo
+     y flujo con InicioSesion.html. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Crear cuenta — INEM José Félix</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --pine:      #1a4d3a;
+      --pine-dark: #0f3327;
+      --leaf:      #3f9468;
+      --leaf-soft: #cfe6d9;
+      --amber:     #d9922f;
+      --paper:     #f6f3ec;
+      --panel:     #fffdf8;
+      --ink:       #23261f;
+      --line:      #ddd6c4;
+    }
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      display: flex;
+      min-height: 100vh;
+      min-height: 100dvh;
+      flex-direction: column;
+    }
+    main { flex: 1 0 auto; display: flex; align-items: center; justify-content: center; padding: 20px 16px; }
+    h4, nav .brand-logo { font-family: 'Fraunces', serif; }
+    nav { background-color: var(--pine-dark) !important; border-bottom: 3px solid var(--amber); }
+
+    /* ── El brand-logo de Materialize se centra con position:absolute y
+         un font-size fijo de 2.1rem sin importar el ancho de pantalla,
+         por eso en mobile se salía del nav y se pisaba con el link de
+         la derecha. Se lo achica y se lo trunca con ellipsis. ── */
+    .nav-wrapper .brand-logo {
+      font-size: 1.5rem;
+      max-width: 60vw;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    @media (max-width: 560px) {
+      .nav-wrapper .brand-logo {
+        position: static !important;
+        transform: none !important;
+        float: left;
+        line-height: 56px;
+        font-size: 1.1rem;
+        max-width: 55vw;
+      }
+      .nav-wrapper .right { padding-right: 4px; }
+      .nav-wrapper .right li a { font-size: 0.8rem; padding: 0 12px; }
+    }
+    .card-login {
+      background: var(--panel);
+      border-radius: 16px;
+      padding: 30px 24px;
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 30px rgba(15,51,39,0.1);
+      width: 100%;
+      max-width: 420px;
+    }
+    .btn-login {
+      background-color: var(--pine) !important;
+      width: 100%;
+      height: 48px;
+      line-height: 48px;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-top: 15px;
+    }
+    .btn-login:hover { background-color: var(--pine-dark) !important; }
+    .login-swap {
+      text-align: center;
+      font-size: 13px;
+      color: #6b7280;
+      margin-top: 16px;
+    }
+    .login-swap a { color: var(--pine); font-weight: 600; text-decoration: none; }
+    .login-swap a:hover { text-decoration: underline; }
+
+    /* Selector de rol tipo "tabs" */
+    .rol-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--pine-dark);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .rol-selector {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 22px;
+    }
+    .rol-opcion {
+      flex: 1;
+      text-align: center;
+      padding: 10px 8px;
+      border: 1.5px solid var(--line);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink);
+      background: var(--paper);
+      transition: all 0.15s ease;
+      user-select: none;
+    }
+    .rol-opcion i { display: block; font-size: 18px; margin-bottom: 2px; }
+    .rol-opcion.activo {
+      background: var(--pine);
+      border-color: var(--pine);
+      color: #ffffff;
+    }
+    .campos-estudiante {
+      display: none;
+      gap: 12px;
+    }
+    .campos-estudiante.visible { display: flex; }
+    .campos-estudiante .form-group { flex: 1; margin-bottom: 0; }
+
+    /* Checklist de requisitos de contraseña */
+    .pass-reqs {
+      list-style: none;
+      margin: -6px 0 18px;
+      padding: 10px 12px;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12.5px;
+    }
+    .pass-reqs li {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 2px 0;
+      color: #8a8074;
+      transition: color 0.15s ease;
+    }
+    .pass-reqs li i { font-size: 15px; color: #b8b0a0; transition: color 0.15s ease; }
+    .pass-reqs li.ok { color: var(--pine-dark); font-weight: 600; }
+    .pass-reqs li.ok i { color: var(--leaf); }
+
+    .field-hint {
+      display: block;
+      font-size: 12px;
+      margin: 5px 0 0 2px;
+      min-height: 15px;
+      transition: color 0.15s ease;
+    }
+    .field-hint.error { color: #c0392b; font-weight: 600; }
+    .field-hint.ok { color: var(--leaf); font-weight: 600; }
+
+    /* ── Campos en casillas con borde (sin el estilo de línea de Materialize) ── */
+    .form-group { margin-bottom: 16px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--pine-dark);
+      margin-bottom: 6px;
+    }
+    .input-wrap { position: relative; }
+    .input-wrap .field-icon {
+      position: absolute;
+      left: 13px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #9a9184;
+      font-size: 19px;
+      pointer-events: none;
+      transition: color 0.15s ease;
+    }
+    /* Selector [type=...] y las reglas base de Materialize pesan más que
+       una sola clase, así que acá se sobreescribe explícitamente todo lo
+       que Materialize le impone a los inputs (padding:0, border-bottom,
+       box-shadow del "underline", margin-bottom, etc.) con !important. */
+    input.form-control-custom,
+    select.form-control-custom,
+    textarea.form-control-custom {
+      width: 100% !important;
+      height: 46px !important;
+      background: var(--paper) !important;
+      border: 1.5px solid var(--line) !important;
+      border-radius: 10px !important;
+      padding: 0 14px !important;
+      font-size: 0.92rem !important;
+      color: var(--ink) !important;
+      font-family: 'Inter', sans-serif !important;
+      outline: none;
+      box-sizing: border-box !important;
+      box-shadow: none !important;
+      margin: 0 !important;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+    .input-wrap input.form-control-custom,
+    .input-wrap select.form-control-custom { padding-left: 42px !important; }
+    .form-control-custom::placeholder { color: #a89f92; opacity: 1; }
+    input.form-control-custom:focus:not([readonly]),
+    select.form-control-custom:focus {
+      border: 1.5px solid var(--leaf) !important;
+      background: #ffffff !important;
+      box-shadow: none !important;
+    }
+    .input-wrap:focus-within .field-icon { color: var(--leaf); }
+    input.form-control-custom.input-error { border-color: #c0392b !important; background: #fdf1ef !important; }
+    input.form-control-custom.input-ok { border-color: var(--leaf) !important; }
+    .toggle-pass {
+      position: absolute;
+      right: 6px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      padding: 6px;
+      cursor: pointer;
+      color: #9a9184;
+      display: flex;
+      align-items: center;
+      border-radius: 6px;
+      transition: color 0.15s ease, background-color 0.15s ease;
+    }
+    .toggle-pass .material-icons { font-size: 19px; }
+    .toggle-pass:hover { color: var(--pine); background: rgba(63,148,104,0.1); }
+    .input-wrap:focus-within .toggle-pass { color: var(--leaf); }
+    input.form-control-custom.has-toggle { padding-right: 40px !important; }
+    select.form-control-custom {
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%231a4d3a'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 10px center !important;
+      background-size: 20px !important;
+      padding-right: 34px !important;
+      cursor: pointer;
+      display: block !important;
+    }
+    select.form-control-custom:invalid { color: #6b7280; }
+
+    /* ── Notificaciones propias (reemplazan el toast anticuado de Materialize) ── */
+    .toast-container-custom {
+      position: fixed;
+      top: 18px;
+      right: 18px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 340px;
+      width: calc(100% - 36px);
+    }
+    .toast-custom {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--amber);
+      border-radius: 12px;
+      box-shadow: 0 12px 28px rgba(15, 51, 39, 0.16);
+      padding: 12px 14px;
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--ink);
+      animation: toastEntrada 0.25s ease;
+    }
+    .toast-custom.exito   { border-left-color: var(--leaf); }
+    .toast-custom.error   { border-left-color: #c0392b; }
+    .toast-custom .toast-icono { font-size: 19px; flex-shrink: 0; margin-top: 1px; }
+    .toast-custom.aviso .toast-icono  { color: var(--amber); }
+    .toast-custom.exito .toast-icono  { color: var(--leaf); }
+    .toast-custom.error .toast-icono  { color: #c0392b; }
+    .toast-custom .toast-texto b { font-weight: 700; color: var(--pine-dark); }
+    @keyframes toastEntrada { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes toastSalida  { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-6px); } }
+    @media (max-width: 480px) {
+      .toast-container-custom { top: auto; bottom: 14px; left: 14px; right: 14px; max-width: none; width: auto; }
+    }
+
+    /* ── Checklist de contraseña: oculto por defecto, aparece al escribir,
+         desaparece de nuevo cuando la contraseña cumple todos los requisitos ── */
+    .pass-reqs {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      margin: 0;
+      padding: 0 12px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+      transition: max-height 0.25s ease, opacity 0.2s ease, margin 0.25s ease, padding 0.25s ease;
+    }
+    .pass-reqs.visible {
+      max-height: 220px;
+      opacity: 1;
+      margin: -6px 0 18px;
+      padding: 10px 12px;
+      border-color: var(--line);
+      background: var(--paper);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-wrapper container">
+    <a href="index.html" class="brand-logo">INEM José Félix</a>
+    <ul class="right">
+      <li><a href="index.html">Volver al Mapa</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main>
+  <div class="card-login">
+    <div class="center-align" style="margin-bottom: 20px;">
+      <img src="INEMlogo.png" alt="INEM Logo" style="height: 60px; border-radius: 6px;">
+      <h4 style="color: var(--pine-dark); margin: 10px 0 5px; font-weight: 700;">Crear cuenta</h4>
+      <p style="color: #6b7280; font-size: 13px; margin: 0;">Regístrate como docente o estudiante</p>
+    </div>
+
+    <form id="registroForm">
+      <span class="rol-label">Me registro como</span>
+      <div class="rol-selector">
+        <div class="rol-opcion activo" data-rol="docente" onclick="seleccionarRol('docente')">
+          <i class="material-icons">school</i> Docente
+        </div>
+        <div class="rol-opcion" data-rol="estudiante" onclick="seleccionarRol('estudiante')">
+          <i class="material-icons">backpack</i> Estudiante
+        </div>
+      </div>
+      <input type="hidden" id="rolSeleccionado" value="docente">
+
+      <div class="form-group">
+        <label class="form-label" for="nombre">Nombre completo</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">badge</i>
+          <input id="nombre" type="text" class="form-control-custom" placeholder="Ej: Ana María Restrepo">
+        </div>
+        <span class="field-hint" id="hintNombre"></span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="correo">Correo institucional</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">email</i>
+          <input id="correo" type="email" class="form-control-custom" placeholder="usuario@inemjose.edu.co">
+        </div>
+        <span class="field-hint" id="hintCorreo"></span>
+      </div>
+
+      <!-- Campos exclusivos de Estudiante -->
+      <div class="campos-estudiante" id="camposEstudiante">
+        <div class="form-group">
+          <label class="form-label" for="inputGrado">Grado</label>
+          <select id="inputGrado" class="form-control-custom">
+            <option value="" disabled selected>Seleccionar</option>
+            <option value="6°">6°</option>
+            <option value="7°">7°</option>
+            <option value="8°">8°</option>
+            <option value="9°">9°</option>
+            <option value="10°">10°</option>
+            <option value="11°">11°</option>
+          </select>
+          <span class="field-hint" id="hintGrado"></span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="inputSeccion">Grupo</label>
+          <div class="input-wrap">
+            <i class="material-icons field-icon">groups</i>
+            <input id="inputSeccion" type="text" class="form-control-custom" placeholder="Ej: 01, 02, A">
+          </div>
+          <span class="field-hint" id="hintSeccion"></span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Contraseña</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">lock</i>
+          <input id="password" type="password" class="form-control-custom has-toggle" minlength="8" oninput="validarPassword()" placeholder="Crea una contraseña segura" autocomplete="new-password">
+          <button type="button" class="toggle-pass" tabindex="-1" aria-label="Mostrar contraseña" onclick="togglePassword('password', this)">
+            <span class="material-icons">visibility</span>
+          </button>
+        </div>
+      </div>
+
+      <ul class="pass-reqs" id="passReqs">
+        <li id="reqLen"><i class="material-icons">radio_button_unchecked</i> Mínimo 8 caracteres</li>
+        <li id="reqMayus"><i class="material-icons">radio_button_unchecked</i> Una letra mayúscula</li>
+        <li id="reqMinus"><i class="material-icons">radio_button_unchecked</i> Una letra minúscula</li>
+        <li id="reqDigito"><i class="material-icons">radio_button_unchecked</i> Un dígito</li>
+        <li id="reqEspecial"><i class="material-icons">radio_button_unchecked</i> Un carácter especial (! @ # $ %...)</li>
+      </ul>
+
+      <div class="form-group">
+        <label class="form-label" for="password2">Confirmar contraseña</label>
+        <div class="input-wrap">
+          <i class="material-icons field-icon">lock_outline</i>
+          <input id="password2" type="password" class="form-control-custom has-toggle" minlength="8" placeholder="Repite tu contraseña" autocomplete="new-password">
+          <button type="button" class="toggle-pass" tabindex="-1" aria-label="Mostrar contraseña" onclick="togglePassword('password2', this)">
+            <span class="material-icons">visibility</span>
+          </button>
+        </div>
+        <span class="field-hint" id="hintPassword2"></span>
+      </div>
+
+      <button type="submit" class="btn btn-login waves-effect waves-light">Crear cuenta</button>
+    </form>
+
+    <p class="login-swap">¿Ya tienes cuenta? <a href="InicioSesion.html">Inicia sesión</a></p>
+  </div>
+</main>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+<script>
+  function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('.material-icons');
+    const mostrar = input.type === 'password';
+    input.type = mostrar ? 'text' : 'password';
+    icon.textContent = mostrar ? 'visibility_off' : 'visibility';
+    btn.setAttribute('aria-label', mostrar ? 'Ocultar contraseña' : 'Mostrar contraseña');
+  }
+
+  function seleccionarRol(rol) {
+    document.getElementById('rolSeleccionado').value = rol;
+    document.querySelectorAll('.rol-opcion').forEach(el => {
+      el.classList.toggle('activo', el.dataset.rol === rol);
+    });
+
+    const camposEstudiante = document.getElementById('camposEstudiante');
+    const inputGrado = document.getElementById('inputGrado');
+    const inputSeccion = document.getElementById('inputSeccion');
+
+    if (rol === 'estudiante') {
+      camposEstudiante.classList.add('visible');
+      inputGrado.setAttribute('required', 'required');
+      inputSeccion.setAttribute('required', 'required');
+    } else {
+      camposEstudiante.classList.remove('visible');
+      inputGrado.removeAttribute('required');
+      inputSeccion.removeAttribute('required');
+    }
+  }
+
+  const DOMINIO_INSTITUCIONAL = '@inemjose.edu.co';
+
+  // ── Notificación propia (reemplaza M.toast) ──────────────────────
+  function mostrarNotificacion(mensaje, tipo = 'aviso', icono) {
+    let cont = document.getElementById('toastContainerCustom');
+    if (!cont) {
+      cont = document.createElement('div');
+      cont.id = 'toastContainerCustom';
+      cont.className = 'toast-container-custom';
+      document.body.appendChild(cont);
+    }
+    const iconos = { aviso: 'warning', error: 'error', exito: 'check_circle' };
+    const el = document.createElement('div');
+    el.className = 'toast-custom ' + tipo;
+    el.innerHTML = `<i class="material-icons toast-icono">${icono || iconos[tipo] || 'info'}</i><span class="toast-texto">${mensaje}</span>`;
+    cont.appendChild(el);
+    setTimeout(() => {
+      el.style.animation = 'toastSalida 0.25s ease forwards';
+      setTimeout(() => el.remove(), 250);
+    }, 3200);
+  }
+
+  let ultimoToastCampo = 0;
+  function notificarCampoVacio(mensaje) {
+    const ahora = Date.now();
+    if (ahora - ultimoToastCampo < 600) return; // evita toasts superpuestos
+    ultimoToastCampo = ahora;
+    mostrarNotificacion(`Te falta completar: <b>${mensaje}</b>`, 'aviso');
+  }
+
+  function setHint(inputId, hintId, mensaje, tipo) {
+    const input = document.getElementById(inputId);
+    const hint = document.getElementById(hintId);
+    hint.textContent = mensaje;
+    hint.className = 'field-hint' + (tipo ? ' ' + tipo : '');
+    input.classList.remove('input-error', 'input-ok');
+    if (tipo === 'error') input.classList.add('input-error');
+    if (tipo === 'ok') input.classList.add('input-ok');
+  }
+
+  function validarNombre() {
+    const nombre = document.getElementById('nombre').value.trim();
+    if (nombre === '') {
+      setHint('nombre', 'hintNombre', '⚠️ Este campo es obligatorio.', 'error');
+      notificarCampoVacio('tu nombre completo');
+      return false;
+    }
+    setHint('nombre', 'hintNombre', '', '');
+    return true;
+  }
+
+  let avisoDominioMostrado = false;
+
+  function normalizarCorreo() {
+    const input = document.getElementById('correo');
+    const valor = input.value.trim();
+
+    // Si solo se escribe el usuario, agrega el dominio institucional automáticamente.
+    if (valor !== '' && !valor.includes('@')) {
+      input.value = valor + DOMINIO_INSTITUCIONAL;
+      avisoDominioMostrado = false;
+    }
+  }
+
+  function validarCorreo() {
+    const input = document.getElementById('correo');
+    const correo = input.value.trim();
+
+    if (correo === '') {
+      setHint('correo', 'hintCorreo', '⚠️ Este campo es obligatorio.', 'error');
+      notificarCampoVacio('tu correo institucional');
+      return false;
+    }
+
+    // Si no tiene @, se agrega automáticamente.
+    if (!correo.includes('@')) {
+      normalizarCorreo();
+      return validarCorreo();
+    }
+
+    const formatoValido = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(correo);
+    if (!formatoValido) {
+      setHint('correo', 'hintCorreo', '❌ Ingresa un correo válido.', 'error');
+      return false;
+    }
+
+    if (!correo.toLowerCase().endsWith(DOMINIO_INSTITUCIONAL)) {
+      setHint('correo', 'hintCorreo', `❌ Debes usar tu correo institucional (${DOMINIO_INSTITUCIONAL}).`, 'error');
+
+      // El aviso se muestra solamente una vez mientras se corrige el campo.
+      if (!avisoDominioMostrado) {
+        mostrarNotificacion(`Recuerda: tu correo debe terminar en <b>${DOMINIO_INSTITUCIONAL}</b>.`, 'aviso');
+        avisoDominioMostrado = true;
+      }
+      return false;
+    }
+
+    avisoDominioMostrado = false;
+    setHint('correo', 'hintCorreo', '✓ Correo institucional válido.', 'ok');
+    return true;
+  }
+
+  function validarPasswordVacia() {
+    const password = document.getElementById('password');
+    if (password.value === '') {
+      password.classList.add('input-error');
+      notificarCampoVacio('tu contraseña');
+      return false;
+    }
+    password.classList.remove('input-error');
+    return true;
+  }
+
+  function validarPassword2() {
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    if (password2 === '') {
+      setHint('password2', 'hintPassword2', '', '');
+      notificarCampoVacio('confirmar tu contraseña');
+      return false;
+    }
+    if (password2 !== password) {
+      setHint('password2', 'hintPassword2', '❌ Las contraseñas no coinciden.', 'error');
+      return false;
+    }
+    setHint('password2', 'hintPassword2', '✓ Las contraseñas coinciden.', 'ok');
+    return true;
+  }
+
+  function validarGrado() {
+    const rol = document.getElementById('rolSeleccionado').value;
+    const grado = document.getElementById('inputGrado');
+    if (rol === 'estudiante' && grado.value === '') {
+      setHint('inputGrado', 'hintGrado', '⚠️ Selecciona tu grado.', 'error');
+      notificarCampoVacio('tu grado');
+      return false;
+    }
+    setHint('inputGrado', 'hintGrado', '', '');
+    return true;
+  }
+
+  function validarSeccion() {
+    const rol = document.getElementById('rolSeleccionado').value;
+    const seccion = document.getElementById('inputSeccion').value.trim();
+    if (rol === 'estudiante' && seccion === '') {
+      setHint('inputSeccion', 'hintSeccion', '⚠️ Ingresa tu grupo.', 'error');
+      notificarCampoVacio('tu grupo/sección');
+      return false;
+    }
+    setHint('inputSeccion', 'hintSeccion', '', '');
+    return true;
+  }
+
+  // Lost focus (blur): notifica apenas el usuario sale de cada campo sin llenarlo
+  document.getElementById('nombre').addEventListener('blur', validarNombre);
+  document.getElementById('correo').addEventListener('blur', function () {
+    normalizarCorreo();
+    validarCorreo();
+  });
+  document.getElementById('password').addEventListener('blur', function () {
+    validarPasswordVacia();
+    validarPassword2();
+  });
+  document.getElementById('password2').addEventListener('blur', validarPassword2);
+  document.getElementById('inputGrado').addEventListener('blur', validarGrado);
+  document.getElementById('inputSeccion').addEventListener('blur', validarSeccion);
+
+  function evaluarRequisitosPassword(password) {
+    return {
+      len: password.length >= 8,
+      mayus: /[A-Z]/.test(password),
+      minus: /[a-z]/.test(password),
+      digito: /[0-9]/.test(password),
+      especial: /[^A-Za-z0-9]/.test(password),
+    };
+  }
+
+  function validarPassword() {
+    const password = document.getElementById('password').value;
+    const req = evaluarRequisitosPassword(password);
+    const todoOk = req.len && req.mayus && req.minus && req.digito && req.especial;
+
+    const marcar = (id, cumplido) => {
+      const li = document.getElementById(id);
+      const icon = li.querySelector('i');
+      li.classList.toggle('ok', cumplido);
+      icon.textContent = cumplido ? 'check_circle' : 'radio_button_unchecked';
+    };
+
+    marcar('reqLen', req.len);
+    marcar('reqMayus', req.mayus);
+    marcar('reqMinus', req.minus);
+    marcar('reqDigito', req.digito);
+    marcar('reqEspecial', req.especial);
+
+    // ── El checklist solo se muestra mientras el usuario está escribiendo
+    //    y todavía le falta algún requisito. Si el campo está vacío o la
+    //    contraseña ya cumple todo, se oculta con una animación suave. ──
+    const reqsBox = document.getElementById('passReqs');
+    reqsBox.classList.toggle('visible', password.length > 0 && !todoOk);
+
+    return todoOk;
+  }
+
+  document.getElementById('registroForm').addEventListener('submit', async function (e) {
+    e.preventDefault();
+
+    const rol = document.getElementById('rolSeleccionado').value;
+    const nombre_completo = document.getElementById('nombre').value.trim();
+    const correo = document.getElementById('correo').value.trim();
+    const password = document.getElementById('password').value;
+    const password2 = document.getElementById('password2').value;
+    const grado = document.getElementById('inputGrado').value;
+    const seccion = document.getElementById('inputSeccion').value.trim();
+
+    if (!validarNombre()) {
+      mostrarNotificacion('Ingresa tu nombre completo.', 'aviso');
+      return;
+    }
+    if (!validarCorreo()) {
+      mostrarNotificacion('Revisa tu correo — debe ser institucional (@inemjose.edu.co).', 'aviso');
+      return;
+    }
+    if (!validarPassword()) {
+      mostrarNotificacion('La contraseña no cumple todos los requisitos.', 'error');
+      return;
+    }
+    if (!validarPassword2()) {
+      mostrarNotificacion('Las contraseñas no coinciden.', 'error');
+      return;
+    }
+    if (rol === 'estudiante' && (!grado || !seccion)) {
+      mostrarNotificacion('Selecciona tu grado y grupo.', 'aviso');
+      return;
+    }
+
+    const payload = { nombre_completo, correo, password, rol };
+    if (rol === 'estudiante') {
+      payload.grado = grado;
+      payload.seccion = seccion;
+    }
+
+    try {
+      const resp = await fetch('registro.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await resp.json();
+
+      if (resp.ok && data.exito) {
+        mostrarNotificacion('Cuenta creada correctamente. Ya puedes iniciar sesión.', 'exito');
+        setTimeout(() => {
+          window.location.href = 'InicioSesion.html';
+        }, 1000);
+      } else {
+        mostrarNotificacion(data.error || 'No se pudo completar el registro.', 'error');
+      }
+    } catch (err) {
+      console.error('Error al conectar con el servidor:', err);
+      mostrarNotificacion('No se pudo conectar con el servidor. Intenta de nuevo.', 'aviso');
+    }
+  });
+
+
+</script>
+</body>
+</html>

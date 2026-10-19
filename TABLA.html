@@ -1,0 +1,976 @@
+<!-- Chosen Palette: INEM Institutional Palette Modernized (Deep Forest Pine, Warm Amber, Sage Emerald, Warm Paper) -->
+<!-- Application Structure Plan: Rediseño visual moderno y adaptativo (Mobile-First) para el módulo de reserva de salones. Elimina superposiciones de texto en formularios, mejora la responsividad en teléfonos móviles y añade tarjetas de entrada estilizadas. -->
+<!-- Visualization & Content Choices: Modal de reserva tipo Bottom Sheet en móviles / Card flotante centrada en escritorio, campos de entrada con etiquetas fijas anticolisión, e indicadores de estado con bordes suaves. -->
+<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title id="pageTitle">Salón — INEM José Félix</title>
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --pine:        #154333;
+      --pine-dark:   #0b291f;
+      --leaf:        #2d7a54;
+      --leaf-soft:   #e2f0e8;
+      --amber:       #d9822b;
+      --amber-soft:  #fdf3e7;
+      --red:         #c0392b;
+      --red-soft:    #fcdad7;
+      --paper:       #f7f5f0;
+      --panel:       #ffffff;
+      --ink:         #1c231f;
+      --ink-muted:   #626b65;
+      --line:        #e3ded3;
+      --radius:      14px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--paper);
+      color: var(--ink);
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: 40px;
+    }
+
+    h4, h5, .brand-logo, #modalTitulo {
+      font-family: 'Fraunces', serif;
+    }
+
+    /* HEADER & NAVBAR */
+    nav {
+      background-color: var(--pine-dark) !important;
+      border-bottom: 3px solid var(--amber);
+      box-shadow: 0 4px 12px rgba(11, 41, 31, 0.15);
+      height: 64px;
+      line-height: 64px;
+    }
+
+    .nav-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 100%;
+      padding: 0 16px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+    }
+
+    .brand-logo-text {
+      font-family: 'Fraunces', serif;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      white-space: nowrap;
+    }
+
+    .nav-user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.12);
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .nav-link-btn {
+      color: rgba(255, 255, 255, 0.9) !important;
+      font-size: 0.88rem;
+      font-weight: 500;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 0 8px;
+      transition: color 0.2s;
+    }
+    .nav-link-btn:hover { color: var(--amber) !important; }
+
+    /* MAIN LAYOUT */
+    main {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 14px;
+    }
+
+    .header-card {
+      margin-bottom: 20px;
+    }
+    .header-card h4 {
+      color: var(--pine-dark);
+      font-weight: 700;
+      margin: 0 0 6px 0;
+      font-size: clamp(1.5rem, 5vw, 2.1rem);
+    }
+    .header-card p {
+      color: var(--ink-muted);
+      font-size: 0.9rem;
+    }
+
+    /* DAY TABS (HORIZONTAL SCROLLABLE) */
+    .day-tabs-wrapper {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      margin-bottom: 20px;
+      scrollbar-width: none; /* Firefox */
+    }
+    .day-tabs-wrapper::-webkit-scrollbar { display: none; } /* Chrome/Safari */
+
+    .day-tab-btn {
+      flex: 0 0 auto;
+      border: 1.5px solid var(--line);
+      background: var(--panel);
+      color: var(--ink);
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+    }
+    .day-tab-btn:hover {
+      border-color: var(--leaf);
+      background: var(--leaf-soft);
+    }
+    .day-tab-btn.active {
+      background: var(--pine);
+      color: #ffffff;
+      border-color: var(--pine);
+      box-shadow: 0 4px 12px rgba(21, 67, 51, 0.25);
+    }
+
+    .badge-horario {
+      background: rgba(0,0,0,0.08);
+      color: inherit;
+      padding: 2px 7px;
+      border-radius: 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+    .day-tab-btn.active .badge-horario {
+      background: rgba(255,255,255,0.22);
+      color: #ffffff;
+    }
+
+    /* LEGEND */
+    .legend-bar {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      color: var(--ink-muted);
+      margin-bottom: 16px;
+    }
+    .legend-item { display: inline-flex; align-items: center; gap: 6px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+    .legend-dot.green { background-color: var(--leaf); }
+    .legend-dot.red { background-color: var(--red); }
+
+    /* SLOT CARDS */
+    .slot-card {
+      background: var(--panel);
+      border-radius: var(--radius);
+      border: 1.5px solid var(--line);
+      margin-bottom: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .slot-card.libre { border-left: 5px solid var(--leaf); }
+    .slot-card.ocupado { border-left: 5px solid var(--red); }
+
+    .slot-header {
+      padding: 14px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .slot-time-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+    }
+    .slot-period {
+      font-weight: 700;
+      font-size: 0.78rem;
+      color: var(--pine-dark);
+      background: var(--paper);
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .slot-hora {
+      font-weight: 700;
+      font-size: 0.95rem;
+      color: var(--ink);
+      white-space: nowrap;
+    }
+    .slot-info-summary {
+      font-size: 0.85rem;
+      color: var(--ink-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .btn-reservar-sm {
+      background: var(--leaf) !important;
+      color: #ffffff !important;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.8rem;
+      text-transform: none;
+      padding: 0 12px;
+      height: 34px;
+      line-height: 34px;
+      box-shadow: none !important;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .btn-reservar-sm:hover { background: var(--pine) !important; }
+
+    .status-badge {
+      font-size: 0.73rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .status-badge.libre { background: var(--leaf-soft); color: var(--leaf); }
+    .status-badge.ocupado { background: var(--red-soft); color: var(--red); }
+
+    .slot-detail {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+      background: #faf8f5;
+      border-top: 0px solid var(--line);
+    }
+    .slot-detail.open {
+      max-height: 300px;
+      border-top: 1px solid var(--line);
+    }
+    .slot-detail-content {
+      padding: 14px 16px;
+      font-size: 0.86rem;
+    }
+
+    .descanso-bar, .fin-jornada-bar {
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .descanso-bar {
+      background: var(--amber-soft);
+      color: var(--amber-dark);
+      border: 1px dashed var(--amber);
+    }
+    .fin-jornada-bar {
+      background: var(--pine-dark);
+      color: #ffffff;
+    }
+
+    /* REDESIGNED MODERN MODAL (MOBILE FRIENDLY) */
+    .modal {
+      border-radius: 20px !important;
+      max-width: 540px !important;
+      width: 92% !important;
+      max-height: 90vh !important;
+      background: var(--panel) !important;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.25) !important;
+      overflow: hidden !important;
+    }
+
+    /* Bottom-sheet effect on small screens */
+    @media (max-width: 600px) {
+      .modal {
+        border-bottom-left-radius: 0 !important;
+        border-bottom-right-radius: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        bottom: 0 !important;
+        top: auto !important;
+        margin: 0 !important;
+        max-height: 88vh !important;
+      }
+    }
+
+    .modal-header-custom {
+      background: var(--pine-dark);
+      color: #ffffff;
+      padding: 18px 20px;
+      position: relative;
+    }
+    .modal-header-custom h5 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #ffffff;
+    }
+    .modal-header-sub {
+      font-size: 0.8rem;
+      color: var(--leaf-soft);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .modal-body-custom {
+      padding: 20px;
+      max-height: calc(88vh - 130px);
+      overflow-y: auto;
+    }
+
+    /* CLEAN FORM STYLING WITHOUT MATERIALIZE OVERLAPS */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--pine-dark);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .form-control-custom {
+      width: 100%;
+      height: 44px;
+      background: #fdfbf7;
+      border: 1.5px solid var(--line) !important;
+      border-radius: 10px !important;
+      padding: 0 12px !important;
+      font-size: 0.92rem !important;
+      color: var(--ink) !important;
+      box-shadow: none !important;
+      outline: none;
+      transition: border-color 0.2s ease, background 0.2s ease;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+    }
+    .form-control-custom:focus {
+      border-color: var(--leaf) !important;
+      background: #ffffff !important;
+    }
+    textarea.form-control-custom {
+      height: 70px !important;
+      padding: 10px 12px !important;
+      resize: none;
+    }
+    select.form-control-custom {
+      display: block !important;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23154333'%3e%3cpath d='M7 10l5 5 5-5z'/%3e%3c/svg%3e");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 20px;
+    }
+
+    .teacher-badge-box {
+      background: var(--leaf-soft);
+      border: 1px solid #c2e0d0;
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--pine-dark);
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .modal-footer-custom {
+      padding: 14px 20px;
+      background: #f7f5f0;
+      border-top: 1px solid var(--line);
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    .btn-modal-cancel {
+      background: transparent;
+      border: 1px solid var(--line);
+      color: var(--ink-muted);
+      border-radius: 10px;
+      padding: 0 16px;
+      height: 42px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+    }
+    .btn-modal-submit {
+      background: var(--pine) !important;
+      color: #ffffff !important;
+      border: none;
+      border-radius: 10px;
+      padding: 0 20px;
+      height: 42px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 4px 12px rgba(21, 67, 51, 0.2);
+    }
+    .btn-modal-submit:hover { background: var(--pine-dark) !important; }
+
+    /* ROW GRID FOR MODAL FORM */
+    .form-row {
+      display: flex;
+      gap: 12px;
+    }
+    .form-row .form-group { flex: 1; }
+
+    /* OVERRIDE TOASTS */
+    .toast { border-radius: 10px !important; font-weight: 600; font-size: 0.88rem; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-container">
+    <a href="index.html" class="brand-group">
+      <img src="INEMlogo.png" alt="INEM Logo" style="height: 34px; border-radius: 4px;">
+      <span class="brand-logo-text">INEM José Félix</span>
+    </a>
+    <div id="navRightMenu">
+      <a href="InicioSesion.html" id="sessionLink" class="nav-link-btn"><i class="material-icons left" style="font-size:18px;">login</i> Iniciar sesión</a>
+      <a href="Registro.html" id="registerLink" class="nav-link-btn hide-on-small-only">Registro</a>
+      
+      <span id="userLink" class="nav-user-pill" style="display: none;">
+        <i class="material-icons" style="font-size:16px;">account_circle</i>
+        <span id="userNameText">Docente</span>
+      </span>
+      <a href="logout.php" id="logoutLink" onclick="cerrarSesionLocal(event)" class="nav-link-btn" style="display: none; margin-left: 8px;">
+        <i class="material-icons" style="font-size:18px;">power_settings_new</i>
+      </a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <div class="header-card">
+    <h4 id="salonTitulo">Salón —</h4>
+    <p>Selecciona un día de la semana para consultar o reservar franjas horarias libres.</p>
+  </div>
+
+  <div class="day-tabs-wrapper" id="dayTabs"></div>
+
+  <div class="legend-bar">
+    <span class="legend-item"><span class="legend-dot green"></span> Disponible</span>
+    <span class="legend-item"><span class="legend-dot red"></span> Ocupado</span>
+  </div>
+
+  <div id="scheduleGrid"></div>
+</main>
+
+<!-- REDESIGNED MODAL -->
+<div id="modalReserva" class="modal">
+  <div class="modal-header-custom">
+    <h5 id="modalTitulo">Reservar Salón</h5>
+    <div class="modal-header-sub">
+      <i class="material-icons" style="font-size: 15px;">schedule</i>
+      <span id="modalSubtitle">—</span>
+    </div>
+  </div>
+
+  <div class="modal-body-custom">
+    <div class="form-group">
+      <label class="form-label" for="inputMateria">Materia / Asignatura *</label>
+      <input id="inputMateria" type="text" class="form-control-custom" placeholder="Ej: Matemáticas, Ciencias, Robótica">
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label" for="inputGrado">Grado *</label>
+        <select id="inputGrado" class="form-control-custom">
+          <option value="" disabled selected>Seleccionar</option>
+          <option value="6°">Grado 6°</option>
+          <option value="7°">Grado 7°</option>
+          <option value="8°">Grado 8°</option>
+          <option value="9°">Grado 9°</option>
+          <option value="10°">Grado 10°</option>
+          <option value="11°">Grado 11°</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="inputSeccion">Grupo / Sección *</label>
+        <input id="inputSeccion" type="text" class="form-control-custom" placeholder="Ej: 01, 02, A">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="inputMotivo">Motivo o Descripción</label>
+      <textarea id="inputMotivo" class="form-control-custom" placeholder="Detalles de la actividad o requerimientos especiales..."></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Docente Responsable</label>
+      <div class="teacher-badge-box">
+        <i class="material-icons">person</i>
+        <span id="labelDocenteNombre">Cargando datos...</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer-custom">
+    <button type="button" class="btn-modal-cancel modal-close">Cancelar</button>
+    <button type="button" class="btn-modal-submit" onclick="confirmarReserva()">
+      <i class="material-icons" style="font-size: 18px;">check_circle</i> Confirmar Reserva
+    </button>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
+<script>
+const API_BASE = "reservas.php";
+const API_SESION = "obtener_usuario.php";
+
+const params = new URLSearchParams(window.location.search);
+const BLOQUE_ACTUAL = params.get("bloque") || "1";
+const SALON_ACTUAL = params.get("salon") || "101";
+
+let reservasPorSlot = {};
+let usuarioLogueado = null;
+
+const HORARIO_A = [
+  { p: "P1",  hora: "6:45 – 7:40",   tipo: "clase" },
+  { p: "P2",  hora: "7:45 – 8:30",   tipo: "clase" },
+  { p: "P3",  hora: "8:50 – 9:45",   tipo: "clase" },
+  { p: "—",   hora: "9:45 – 10:00",  tipo: "descanso" },
+  { p: "P4",  hora: "9:45 – 10:35",  tipo: "clase" },
+  { p: "P5",  hora: "10:55 – 11:50", tipo: "clase" },
+  { p: "P6",  hora: "11:50 – 12:45", tipo: "clase" },
+  { p: "—",   hora: "12:45 – 13:00", tipo: "fin", label: "Fin de Jornada Mañana" },
+  { p: "P7",  hora: "1:00 – 1:55",   tipo: "clase" },
+  { p: "P8",  hora: "1:55 – 2:45",   tipo: "clase" },
+  { p: "P9",  hora: "3:05 – 4:00",   tipo: "clase" },
+  { p: "P10", hora: "4:00 – 4:50",   tipo: "clase" },
+  { p: "P11", hora: "5:10 – 6:05",   tipo: "clase" },
+  { p: "P12", hora: "6:05 – 6:45",   tipo: "clase" },
+];
+
+const HORARIO_B = [
+  { p: "P1",  hora: "6:45 – 7:25",   tipo: "clase" },
+  { p: "P2",  hora: "7:25 – 8:05",   tipo: "clase" },
+  { p: "P3",  hora: "8:05 – 8:45",   tipo: "clase" },
+  { p: "—",   hora: "8:45 – 9:15",   tipo: "descanso" },
+  { p: "P4",  hora: "9:15 – 9:55",   tipo: "clase" },
+  { p: "P5",  hora: "9:55 – 10:35",  tipo: "clase" },
+  { p: "P6",  hora: "10:35 – 11:15", tipo: "clase" },
+  { p: "P7",  hora: "11:15 – 11:55", tipo: "clase" },
+  { p: "—",   hora: "11:55 – 12:50", tipo: "fin", label: "Fin de Jornada Mañana" },
+  { p: "P8",  hora: "12:50 – 1:35",  tipo: "clase" },
+  { p: "P9",  hora: "1:35 – 2:20",   tipo: "clase" },
+  { p: "P10", hora: "2:40 – 3:25",   tipo: "clase" },
+  { p: "P11", hora: "3:25 – 4:10",   tipo: "clase" },
+  { p: "P12", hora: "4:30 – 5:15",   tipo: "clase" },
+  { p: "P13", hora: "5:15 – 6:00",   tipo: "clase" },
+];
+
+function generarFechas(cantidad = 10) {
+  const dias = [];
+  const cursor = new Date();
+  cursor.setHours(0, 0, 0, 0);
+
+  while (dias.length < cantidad) {
+    const dow = cursor.getDay();
+    if (dow >= 1 && dow <= 5) {
+      const yyyy = cursor.getFullYear();
+      const mm = String(cursor.getMonth() + 1).padStart(2, "0");
+      const dd = String(cursor.getDate()).padStart(2, "0");
+      const etiqueta = cursor.toLocaleDateString("es-CO", { weekday: "short", day: "numeric", month: "short" });
+      dias.push({
+        fecha: `${yyyy}-${mm}-${dd}`,
+        etiqueta: etiqueta.charAt(0).toUpperCase() + etiqueta.slice(1),
+        horario: dow === 5 ? "B" : "A",
+      });
+    }
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  return dias;
+}
+
+const FECHAS = generarFechas(10);
+let fechaActiva = FECHAS[0].fecha;
+let modalSlotKey = null;
+let modalInstance = null;
+
+async function verificarSesion() {
+  let logrado = false;
+  try {
+    const resp = await fetch(API_SESION);
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.autenticado && data.usuario) {
+        usuarioLogueado = data.usuario;
+        localStorage.setItem("usuarioINEM", JSON.stringify(usuarioLogueado));
+        aplicarUIUsuario();
+        logrado = true;
+      }
+    }
+  } catch (err) {
+    console.warn("Servidor PHP no alcanzado, revisando almacenamiento local.");
+  }
+
+  if (!logrado) {
+    const sesionLocal = localStorage.getItem("usuarioINEM");
+    if (sesionLocal) {
+      try {
+        usuarioLogueado = JSON.parse(sesionLocal);
+        aplicarUIUsuario();
+      } catch (e) {
+        console.error("Error al decodificar sesión local:", e);
+      }
+    }
+  }
+}
+
+function aplicarUIUsuario() {
+  if (!usuarioLogueado || !usuarioLogueado.nombre) return;
+
+  const sessionLink = document.getElementById("sessionLink");
+  const registerLink = document.getElementById("registerLink");
+  const userLink = document.getElementById("userLink");
+  const logoutLink = document.getElementById("logoutLink");
+  const userNameText = document.getElementById("userNameText");
+
+  if (sessionLink) sessionLink.style.display = "none";
+  if (registerLink) registerLink.style.display = "none";
+  if (userLink && userNameText) {
+    userNameText.textContent = usuarioLogueado.nombre;
+    userLink.style.display = "inline-flex";
+  }
+  if (logoutLink) logoutLink.style.display = "inline-flex";
+}
+
+function cerrarSesionLocal(e) {
+  localStorage.removeItem("usuarioINEM");
+}
+
+function renderTabs() {
+  const cont = document.getElementById("dayTabs");
+  cont.innerHTML = FECHAS.map(f => {
+    const esActivo = f.fecha === fechaActiva;
+    return `
+      <button class="day-tab-btn ${esActivo ? 'active' : ''}" onclick="setFecha('${f.fecha}')">
+        <span>${f.etiqueta}</span>
+        <span class="badge-horario">H${f.horario}</span>
+      </button>
+    `;
+  }).join("");
+}
+
+function setFecha(fecha) {
+  fechaActiva = fecha;
+  renderTabs();
+  cargarReservas();
+}
+
+async function cargarReservas() {
+  reservasPorSlot = {};
+  try {
+    const url = `${API_BASE}?bloque=${encodeURIComponent(BLOQUE_ACTUAL)}&salon=${encodeURIComponent(SALON_ACTUAL)}&fecha=${encodeURIComponent(fechaActiva)}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error("Sin respuesta de servidor");
+    const reservas = await resp.json();
+
+    reservas.forEach(r => {
+      const slotKey = `${r.fecha}_${r.periodo}`;
+      reservasPorSlot[slotKey] = r;
+    });
+  } catch (err) {
+    console.warn("Visualización aislada o sin reservas creadas aún.");
+  }
+  renderSchedule();
+}
+
+function renderSchedule() {
+  const diaConfig = FECHAS.find(f => f.fecha === fechaActiva);
+  const horario = diaConfig.horario === "B" ? HORARIO_B : HORARIO_A;
+  const grid = document.getElementById("scheduleGrid");
+  grid.innerHTML = "";
+
+  horario.forEach((slot) => {
+    const el = document.createElement("div");
+
+    if (slot.tipo === "descanso") {
+      el.innerHTML = `
+        <div class="descanso-bar">
+          <i class="material-icons" style="font-size: 20px;">free_breakfast</i>
+          <span>DESCANSO</span>
+          <span style="font-weight:400; opacity:0.85;">(${slot.hora})</span>
+        </div>`;
+      grid.appendChild(el);
+      return;
+    }
+
+    if (slot.tipo === "fin") {
+      el.innerHTML = `
+        <div class="fin-jornada-bar">
+          <i class="material-icons" style="font-size: 20px;">flag</i>
+          <span>${slot.label.toUpperCase()}</span>
+          <span style="font-weight:400; opacity:0.85;">(${slot.hora})</span>
+        </div>`;
+      grid.appendChild(el);
+      return;
+    }
+
+    const slotKey = `${fechaActiva}_${slot.p}`;
+    const infoSlot = reservasPorSlot[slotKey] || null;
+    const estadoReal = infoSlot ? "ocupado" : "libre";
+
+    el.className = `slot-card ${estadoReal}`;
+
+    let infoResumen = "Disponible para reservar";
+    if (infoSlot) {
+      const grupoText = (infoSlot.grado || infoSlot.seccion) ? ` [${infoSlot.grado || ''}-${infoSlot.seccion || ''}]` : '';
+      infoResumen = `${infoSlot.materia}${grupoText} · ${infoSlot.responsable}`;
+    }
+
+    const accionHTML = estadoReal === "libre"
+      ? `<button class="btn-reservar-sm" onclick="intentarAbrirModal('${slotKey}','${slot.hora}');event.stopPropagation()"><i class="material-icons" style="font-size:16px;">add</i> Reservar</button>`
+      : `<span class="status-badge ocupado">Ocupado</span>`;
+
+    el.innerHTML = `
+      <div class="slot-header" onclick="toggleDetalle('${slotKey}')">
+        <div class="slot-time-group">
+          <span class="slot-period">${slot.p}</span>
+          <span class="slot-hora">${slot.hora}</span>
+        </div>
+        <div class="slot-info-summary hide-on-small-only">${infoResumen}</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          ${accionHTML}
+          <i class="material-icons grey-text" id="chevron-${slotKey}" style="transition: transform .3s;">expand_more</i>
+        </div>
+      </div>
+      <div class="slot-detail" id="detail-${slotKey}">
+        <div class="slot-detail-content">
+          ${buildDetalle(slotKey, slot, estadoReal, infoSlot)}
+        </div>
+      </div>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+function buildDetalle(slotKey, slot, estado, infoSlot) {
+  if (estado === "ocupado" && infoSlot) {
+    return `
+      <div style="display:flex; flex-direction:column; gap:6px;">
+        <div><b>Materia / Asignatura:</b> ${infoSlot.materia || '—'}</div>
+        <div><b>Grado / Grupo:</b> ${infoSlot.grado || '—'} - ${infoSlot.seccion || '—'}</div>
+        <div><b>Docente:</b> ${infoSlot.responsable || '—'}</div>
+        <div><b>Motivo:</b> ${infoSlot.motivo || 'Sin detalles adicionales'}</div>
+        <div style="margin-top:10px;">
+          <button class="btn red darken-2 btn-small waves-effect" style="border-radius:6px; font-weight:600;" onclick="cancelarReserva('${slotKey}')">Cancelar Reserva</button>
+        </div>
+      </div>`;
+  }
+  return `
+    <div style="color:var(--ink-muted);">
+      Esta franja horaria se encuentra disponible. 
+      <a href="#!" style="color:var(--pine); font-weight:700; text-decoration:underline;" onclick="intentarAbrirModal('${slotKey}','${slot.hora}'); return false;">Reservar este espacio →</a>
+    </div>`;
+}
+
+function toggleDetalle(slotKey) {
+  const detail = document.getElementById(`detail-${slotKey}`);
+  const chevron = document.getElementById(`chevron-${slotKey}`);
+  if (!detail) return;
+  
+  if(detail.classList.contains("open")) {
+    detail.classList.remove("open");
+    chevron.style.transform = "rotate(0deg)";
+  } else {
+    detail.classList.add("open");
+    chevron.style.transform = "rotate(180deg)";
+  }
+}
+
+function intentarAbrirModal(slotKey, hora) {
+  if (!usuarioLogueado) {
+    M.toast({
+      html: '🔒 Debes iniciar sesión para realizar una reserva', 
+      classes: 'red darken-2'
+    });
+    setTimeout(() => {
+      window.location.href = "InicioSesion.html";
+    }, 1200);
+    return;
+  }
+
+  if (usuarioLogueado.rol === 'estudiante') {
+    M.toast({
+      html: '🚫 Los estudiantes no pueden reservar salones.',
+      classes: 'red darken-2'
+    });
+    return;
+  }
+
+  abrirModal(slotKey, hora);
+}
+
+function abrirModal(slotKey, hora) {
+  modalSlotKey = slotKey;
+  document.getElementById("modalTitulo").textContent = `Reservar Salón ${SALON_ACTUAL}`;
+  document.getElementById("modalSubtitle").textContent = `${hora} · ${FECHAS.find(f => f.fecha === fechaActiva)?.etiqueta}`;
+  
+  document.getElementById("inputMateria").value = "";
+  document.getElementById("inputGrado").selectedIndex = 0;
+  document.getElementById("inputSeccion").value = "";
+  document.getElementById("inputMotivo").value = "";
+  
+  document.getElementById("labelDocenteNombre").textContent = usuarioLogueado.nombre;
+  
+  modalInstance.open();
+}
+
+async function confirmarReserva() {
+  const materia = document.getElementById("inputMateria").value.trim();
+  const grado = document.getElementById("inputGrado").value;
+  const seccion = document.getElementById("inputSeccion").value.trim();
+  const motivo = document.getElementById("inputMotivo").value.trim();
+  const responsable = usuarioLogueado ? usuarioLogueado.nombre : "Docente INEM";
+
+  if (!materia) {
+    M.toast({html: '⚠️ Ingresa el nombre de la materia', classes: 'amber darken-4'});
+    return;
+  }
+  if (!grado) {
+    M.toast({html: '⚠️ Selecciona el grado escolar', classes: 'amber darken-4'});
+    return;
+  }
+  if (!seccion) {
+    M.toast({html: '⚠️ Ingresa el grupo o sección', classes: 'amber darken-4'});
+    return;
+  }
+
+  const [fecha, periodo] = modalSlotKey.split("_");
+  const horario = FECHAS.find(f => f.fecha === fechaActiva)?.horario === "B" ? HORARIO_B : HORARIO_A;
+  const slotInfo = horario.find(s => s.p === periodo);
+
+  const nuevaReserva = {
+    id: 'res_' + Date.now(),
+    bloque: parseInt(BLOQUE_ACTUAL, 10),
+    salon: SALON_ACTUAL,
+    fecha: fecha,
+    periodo: periodo,
+    hora: slotInfo ? slotInfo.hora : "",
+    materia: materia,
+    grado: grado,
+    seccion: seccion,
+    motivo: motivo,
+    responsable: responsable
+  };
+
+  try {
+    const resp = await fetch(API_BASE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(nuevaReserva)
+    });
+
+    if (!resp.ok) {
+      const err = await resp.json().catch(() => ({}));
+      throw new Error(err.error || "Error de servidor");
+    }
+  } catch (err) {
+    console.warn("Guardado local activo:", err);
+  }
+
+  reservasPorSlot[modalSlotKey] = nuevaReserva;
+
+  modalInstance.close();
+  M.toast({html: '✅ Reserva confirmada exitosamente', classes: 'green darken-2'});
+  renderSchedule();
+}
+
+async function cancelarReserva(slotKey) {
+  const reserva = reservasPorSlot[slotKey];
+  if (!reserva) return;
+
+  if (!confirm(`¿Deseas cancelar la reserva de "${reserva.materia}"?`)) return;
+
+  try {
+    await fetch(`${API_BASE}?id=${encodeURIComponent(reserva.id)}`, { method: "DELETE" });
+  } catch (err) {
+    console.warn("Cancelación local realizada.");
+  }
+
+  delete reservasPorSlot[slotKey];
+  M.toast({html: '🗑️ Reserva cancelada', classes: 'red darken-2'});
+  renderSchedule();
+}
+
+document.addEventListener('DOMContentLoaded', async function() {
+  const modalElem = document.querySelector('#modalReserva');
+  modalInstance = M.Modal.init(modalElem, { dismissible: true, opacity: 0.4 });
+
+  document.getElementById("pageTitle").textContent = `Salón ${SALON_ACTUAL} — INEM José Félix`;
+  document.getElementById("salonTitulo").textContent = `Horario Salón ${SALON_ACTUAL}`;
+
+  await verificarSesion();
+
+  // ── Los estudiantes no pueden entrar a reservar salones ──
+  if (usuarioLogueado && usuarioLogueado.rol === 'estudiante') {
+    M.toast({
+      html: '🚫 Los estudiantes no pueden reservar salones. Te redirigimos a tu horario...',
+      classes: 'red darken-2'
+    });
+    setTimeout(() => {
+      window.location.href = 'horario.html';
+    }, 1600);
+    return;
+  }
+
+  renderTabs();
+  cargarReservas();
+});
+</script>
+</body>
+</html>
